@@ -1,0 +1,349 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Conecta Pro</title>
+
+<style>
+* {
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+body {
+  background:#f4f6f9;
+}
+
+/* NAV */
+nav {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:15px 30px;
+  background:#1877f2;
+  color:white;
+}
+
+nav h2 {
+  font-weight:600;
+}
+
+nav button {
+  margin-left:10px;
+  padding:8px 12px;
+  border:none;
+  border-radius:5px;
+  background:white;
+  color:#1877f2;
+  cursor:pointer;
+}
+
+/* HERO (BANNER) */
+.hero {
+  height:250px;
+  background: url('https://upload.wikimedia.org/wikipedia/commons/0/0c/Fortaleza_de_S%C3%A3o_Jos%C3%A9_de_Macap%C3%A1.jpg') center/cover;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:white;
+  text-align:center;
+  position:relative;
+}
+
+.hero::after {
+  content:"";
+  position:absolute;
+  width:100%;
+  height:100%;
+  background:rgba(0,0,0,0.5);
+}
+
+.hero h1 {
+  position:relative;
+  font-size:2rem;
+  z-index:1;
+}
+
+/* GRID */
+.container {
+  display:grid;
+  grid-template-columns:1fr 2fr 1fr;
+  gap:20px;
+  padding:20px;
+}
+
+.box {
+  background:white;
+  padding:15px;
+  border-radius:10px;
+  box-shadow:0 2px 8px rgba(0,0,0,0.05);
+}
+
+/* POSTS */
+.post {
+  border-bottom:1px solid #eee;
+  padding:10px 0;
+}
+
+.post img {
+  width:100%;
+  border-radius:8px;
+  margin-top:5px;
+}
+
+.premium {
+  border:2px solid gold;
+  background:#fffbea;
+}
+
+/* CHAT */
+.chat-box {
+  height:150px;
+  overflow-y:auto;
+  border:1px solid #ddd;
+  margin-bottom:10px;
+  padding:5px;
+  border-radius:5px;
+  background:#fafafa;
+}
+
+/* MODAL */
+.modal {
+  position:fixed;
+  width:100%;
+  height:100%;
+  display:none;
+  background:rgba(0,0,0,0.6);
+  justify-content:center;
+  align-items:center;
+}
+
+.modal-content {
+  background:white;
+  padding:20px;
+  border-radius:10px;
+  width:300px;
+}
+
+/* RESPONSIVO */
+@media(max-width:900px){
+  .container {
+    grid-template-columns:1fr;
+  }
+
+  .hero {
+    height:180px;
+  }
+
+  .hero h1 {
+    font-size:1.5rem;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<nav>
+  <h2>Conecta Pro</h2>
+  <div>
+    <button onclick="openModal('login')">Login</button>
+    <button onclick="openModal('register')">Cadastrar</button>
+  </div>
+</nav>
+
+<!-- BANNER -->
+<div class="hero">
+  <h1>Kelby Oliveira Rodrigues<br>Conectando serviços e pessoas</h1>
+</div>
+
+<div class="container">
+
+<!-- MENU -->
+<div class="box">
+  <h3>Menu</h3>
+  <p>🏠 Home</p>
+  <p>📍 Localização: <span id="loc">...</span></p>
+
+  <button onclick="addService()">+ Novo Serviço</button>
+
+  <h4 style="margin-top:15px;">⭐ Indicações</h4>
+  <p>Maria - Diarista ⭐⭐⭐⭐</p>
+  <p>João - Eletricista ⭐⭐⭐⭐⭐</p>
+</div>
+
+<!-- FEED -->
+<div class="box">
+  <h3>Serviços Disponíveis</h3>
+  <div id="feed"></div>
+</div>
+
+<!-- LATERAL -->
+<div class="box">
+  <h3>💎 Destaques</h3>
+  <p>Anuncie aqui</p>
+
+  <h3 style="margin-top:15px;">🤝 Parceiros</h3>
+  <p>Empresa XPTO</p>
+
+  <h3 style="margin-top:15px;">💬 Chat</h3>
+  <div class="chat-box" id="chat"></div>
+  <input id="msg" placeholder="Digite mensagem">
+  <button onclick="sendMsg()">Enviar</button>
+</div>
+
+</div>
+
+<!-- MODAL -->
+<div class="modal" id="modal">
+  <div class="modal-content" id="modalContent"></div>
+</div>
+
+<script>
+
+let users = [];
+let currentUser = null;
+let services = [];
+
+/* MODAL */
+function openModal(type){
+  let modal = document.getElementById("modal");
+  let content = document.getElementById("modalContent");
+
+  modal.style.display = "flex";
+
+  if(type === 'register'){
+    content.innerHTML = `
+      <h3>Cadastro</h3>
+      <input id="name" placeholder="Nome"><br><br>
+      <input id="email" placeholder="Email"><br><br>
+      <select id="type">
+        <option value="cliente">Cliente</option>
+        <option value="prestador">Prestador</option>
+      </select><br><br>
+      <button onclick="register()">Cadastrar</button>
+    `;
+  }
+
+  if(type === 'login'){
+    content.innerHTML = `
+      <h3>Login</h3>
+      <input id="emailLogin" placeholder="Email"><br><br>
+      <button onclick="login()">Entrar</button>
+    `;
+  }
+}
+
+/* CADASTRO */
+function register(){
+  let user = {
+    name: document.getElementById("name").value,
+    email: document.getElementById("email").value,
+    type: document.getElementById("type").value,
+    approved:false
+  };
+
+  if(!user.name || !user.email){
+    alert("Preencha tudo!");
+    return;
+  }
+
+  users.push(user);
+  alert("Cadastro enviado!");
+
+  document.getElementById("modal").style.display="none";
+
+  setTimeout(()=>{
+    user.approved = true;
+    alert("Cadastro aprovado!");
+  },3000);
+}
+
+/* LOGIN */
+function login(){
+  let email = document.getElementById("emailLogin").value;
+  let user = users.find(u=>u.email===email);
+
+  if(!user) return alert("Usuário não encontrado");
+
+  if(!user.approved){
+    alert("Aguardando aprovação!");
+    return;
+  }
+
+  currentUser = user;
+  alert("Bem-vindo " + user.name);
+
+  document.getElementById("modal").style.display="none";
+}
+
+/* SERVIÇO */
+function addService(){
+  if(!currentUser){
+    alert("Faça login!");
+    return;
+  }
+
+  let name = prompt("Nome do serviço:");
+  if(!name) return;
+
+  let service = {
+    name,
+    rating: Math.floor(Math.random()*5)+1,
+    premium: Math.random() > 0.7
+  };
+
+  services.push(service);
+  render();
+}
+
+/* RENDER */
+function render(){
+  let feed = document.getElementById("feed");
+  feed.innerHTML = "";
+
+  services.forEach(s=>{
+    feed.innerHTML += `
+      <div class="post ${s.premium ? 'premium':''}">
+        <strong>${s.name}</strong>
+        <p>⭐ ${s.rating}</p>
+        <button onclick="rate()">Avaliar</button>
+      </div>
+    `;
+  });
+}
+
+function rate(){
+  alert("Avaliação enviada!");
+}
+
+/* CHAT */
+function sendMsg(){
+  let msg = document.getElementById("msg").value;
+  if(!msg) return;
+
+  document.getElementById("chat").innerHTML += `<p>${msg}</p>`;
+  document.getElementById("msg").value="";
+}
+
+/* LOCALIZAÇÃO */
+navigator.geolocation.getCurrentPosition(pos=>{
+  document.getElementById("loc").innerText =
+    pos.coords.latitude.toFixed(2) + ", " +
+    pos.coords.longitude.toFixed(2);
+});
+
+/* FECHAR MODAL */
+window.onclick = function(e){
+  if(e.target.id === "modal"){
+    document.getElementById("modal").style.display="none";
+  }
+}
+
+</script>
+
+</body>
+</html>
